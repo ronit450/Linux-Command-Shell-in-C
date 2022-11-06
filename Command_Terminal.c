@@ -5,6 +5,8 @@
 #include <signal.h>
 #include <string.h>
 #include "parse.c"
+#include <dirent.h>
+#include <errno.h>
 
 int execl(const char *path, const char *arg, ...);
 
@@ -61,12 +63,10 @@ int main()
         if (command_details->pipeNum > 0)
         {
 
-           
-        //    Making two commands, one before | and one after it 
+            //    Making two commands, one before | and one after it
 
             struct commandType *command_1 = &(command_details->CommArray[0]);
             struct commandType *command_2 = &(command_details->CommArray[1]);
-
 
             char *main_parsed[command_1->VarNum + 1];
             char *Output_from_pipe[command_2->VarNum + 1];
@@ -156,7 +156,16 @@ int main()
                 }
                 if (strcmp(command_details->CommArray[0].command, "cd") == 0)
                 {
-                    chdir(command_details->CommArray[0].VarList[0]);
+                    DIR *dir = opendir(command_details->CommArray[0].VarList[0]);
+                    if (dir)
+                    {
+                        chdir(command_details->CommArray[0].VarList[0]);
+                        closedir(dir);
+                    }
+                    else
+                    {
+                        printf("Given Path does not exisit \n");
+                    }
                 }
                 if (strcmp(command_details->CommArray[0].command, "history") == 0)
                 {
@@ -203,7 +212,9 @@ int main()
                 {
                     if (total_jobs == 0)
                     {
-                        exit(0);
+                        printf("Shell will be closed now Good Bye :) \n");
+                        sleep(2);
+                        exit(1);
                     }
                     else
                     {
@@ -227,7 +238,6 @@ int main()
                         dup2(out, STDOUT_FILENO);
                         close(out);
                         execvp(command_details->CommArray[0].command, command_details->CommArray[0].VarList);
-                        int pid = getpid();
                     }
                     else
                     {
@@ -235,9 +245,7 @@ int main()
                         {
                             all_jobs[total_jobs].pid = pid;
                             all_jobs[total_jobs].Local_ID = total_jobs;
-                            printf("%d PID\n", all_jobs[total_jobs].pid);
                             total_jobs = total_jobs + 1;
-                            printf("%d total jobs\n", total_jobs);
                             signal(SIGCHLD, signal_handler);
                         }
                         /* Wait for child process to terminate */
@@ -250,7 +258,7 @@ int main()
             }
             else
             {
-                printf("Job kam kar bhai \n");
+                printf("Backgroud Job Limit Exceeded \n");
             }
         }
     }
