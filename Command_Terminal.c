@@ -149,9 +149,17 @@ int main()
 
                 if (strcmp(command_details->CommArray[0].command, "jobs") == 0)
                 {
-                    for (int i = 0; i < total_jobs; i++)
+                    if (total_jobs == 0)
                     {
-                        printf("Local Id of Process %d \n Process Id of Process %d \n ", all_jobs[i].Local_ID, all_jobs[i].pid);
+                        printf("No Backgrround Job");
+                    }
+                    else
+                    {
+
+                        for (int i = 0; i < total_jobs; i++)
+                        {
+                            printf("Local Id of Process %d \n Process Id of Process %d \n ", all_jobs[i].Local_ID, all_jobs[i].pid);
+                        }
                     }
                 }
                 if (strcmp(command_details->CommArray[0].command, "cd") == 0)
@@ -231,13 +239,35 @@ int main()
                     if (pid == 0)
                     {
                         /* Execute the command in child process */
-                        int in = open(command_details->inFile, O_RDONLY);
-                        dup2(in, STDIN_FILENO);
-                        close(in);
-                        int out = open(command_details->outFile, O_WRONLY | O_CREAT, 0666); // Should also be symbolic values for access rights
-                        dup2(out, STDOUT_FILENO);
-                        close(out);
-                        execvp(command_details->CommArray[0].command, command_details->CommArray[0].VarList);
+                        if ((command_details->boolInfile == 0 && command_details->boolOutfile == 0))
+                        {
+
+                            execvp(command_details->CommArray[0].command, command_details->CommArray[0].VarList);
+                        }
+                        else if (command_details->boolInfile == 1 && command_details->boolOutfile == 1)
+                        {
+                            int in = open(command_details->inFile, O_RDONLY);
+                            dup2(in, STDIN_FILENO);
+                            close(in);
+                            int out = open(command_details->outFile, O_WRONLY | O_CREAT, 0666); // Should also be symbolic values for access rights
+                            dup2(out, STDOUT_FILENO);
+                            close(out);
+                            execvp(command_details->CommArray[0].command, command_details->CommArray[0].VarList);
+                        }
+                        else if (command_details->boolInfile == 1 && command_details->boolOutfile == 0)
+                        {
+                            int in = open(command_details->inFile, O_RDONLY);
+                            dup2(in, STDIN_FILENO);
+                            close(in);
+                            execvp(command_details->CommArray[0].command, command_details->CommArray[0].VarList);
+                        }
+                        else if (command_details->boolInfile == 0 && command_details->boolOutfile == 1)
+                        {
+                            int out = open(command_details->outFile, O_WRONLY | O_CREAT, 0666); // Should also be symbolic values for access rights
+                            dup2(out, STDOUT_FILENO);
+                            close(out);
+                            execvp(command_details->CommArray[0].command, command_details->CommArray[0].VarList);
+                        }
                     }
                     else
                     {
